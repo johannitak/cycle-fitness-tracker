@@ -447,6 +447,83 @@
         let lastPeriodDate = null;
         let avgCycleLength = 29;
 
+        // Cycle Management Functions (MUST BE DEFINED FIRST)
+        function calculateCurrentCycleDay() {
+            if (!lastPeriodDate) {
+                document.getElementById('cycleDayDisplay').textContent = '-';
+                document.getElementById('nextPeriodInfo').textContent = 'Set period date in Settings';
+                const statusEl = document.getElementById('cycleStatusDisplay');
+                if (statusEl) statusEl.textContent = 'Set your last period date above';
+                return;
+            }
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const periodDate = new Date(lastPeriodDate);
+            periodDate.setHours(0, 0, 0, 0);
+            
+            const diffTime = today - periodDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const currentDay = diffDays + 1; // Day 1 = period start day
+            
+            // Calculate next period prediction
+            const nextPeriodDate = new Date(periodDate);
+            nextPeriodDate.setDate(nextPeriodDate.getDate() + avgCycleLength);
+            const daysUntilNext = Math.floor((nextPeriodDate - today) / (1000 * 60 * 60 * 24));
+            
+            // Update display
+            document.getElementById('cycleDayDisplay').textContent = currentDay;
+            
+            if (daysUntilNext > 0) {
+                document.getElementById('nextPeriodInfo').textContent = 
+                    `Day ${currentDay} / ~${avgCycleLength} • Next period in ~${daysUntilNext} days`;
+            } else if (daysUntilNext === 0) {
+                document.getElementById('nextPeriodInfo').textContent = 
+                    `Day ${currentDay} / ~${avgCycleLength} • Period predicted TODAY`;
+            } else {
+                document.getElementById('nextPeriodInfo').textContent = 
+                    `Day ${currentDay} • Period ${Math.abs(daysUntilNext)} days overdue`;
+            }
+            
+            // Update status in settings
+            const phase = getCyclePhase(currentDay);
+            const statusEl = document.getElementById('cycleStatusDisplay');
+            if (statusEl) {
+                statusEl.innerHTML = `
+                    <div>Day ${currentDay} of cycle</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 4px;">
+                        ${phase.name} • Next period: ${nextPeriodDate.toLocaleDateString()}
+                    </div>
+                `;
+            }
+            
+            updateCycleInfo();
+        }
+        
+        function saveCycleSettings() {
+            lastPeriodDate = document.getElementById('lastPeriodDate').value;
+            avgCycleLength = parseInt(document.getElementById('avgCycleLength').value) || 29;
+            
+            if (lastPeriodDate) {
+                localStorage.setItem('lastPeriodDate', lastPeriodDate);
+                localStorage.setItem('avgCycleLength', avgCycleLength);
+                calculateCurrentCycleDay();
+            }
+        }
+        
+        function markPeriodStartedToday() {
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            
+            document.getElementById('lastPeriodDate').value = dateString;
+            lastPeriodDate = dateString;
+            
+            localStorage.setItem('lastPeriodDate', dateString);
+            calculateCurrentCycleDay();
+            
+            alert('🩸 Period marked! Cycle day reset to Day 1.');
+        }
+
         // Initialize app
         window.onload = function() {
             loadFromLocalStorage();
@@ -495,8 +572,82 @@
         }
 
         // Cycle Management
+        function calculateCurrentCycleDay() {
+            if (!lastPeriodDate) {
+                document.getElementById('cycleDayDisplay').textContent = '-';
+                document.getElementById('nextPeriodInfo').textContent = 'Set period date in Settings';
+                document.getElementById('cycleStatusDisplay').textContent = 'Set your last period date above';
+                return;
+            }
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const periodDate = new Date(lastPeriodDate);
+            periodDate.setHours(0, 0, 0, 0);
+            
+            const diffTime = today - periodDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const currentDay = diffDays + 1; // Day 1 = period start day
+            
+            // Calculate next period prediction
+            const nextPeriodDate = new Date(periodDate);
+            nextPeriodDate.setDate(nextPeriodDate.getDate() + avgCycleLength);
+            const daysUntilNext = Math.floor((nextPeriodDate - today) / (1000 * 60 * 60 * 24));
+            
+            // Update display
+            document.getElementById('cycleDayDisplay').textContent = currentDay;
+            
+            if (daysUntilNext > 0) {
+                document.getElementById('nextPeriodInfo').textContent = 
+                    `Day ${currentDay} / ~${avgCycleLength} • Next period in ~${daysUntilNext} days`;
+            } else if (daysUntilNext === 0) {
+                document.getElementById('nextPeriodInfo').textContent = 
+                    `Day ${currentDay} / ~${avgCycleLength} • Period predicted TODAY`;
+            } else {
+                document.getElementById('nextPeriodInfo').textContent = 
+                    `Day ${currentDay} • Period ${Math.abs(daysUntilNext)} days overdue`;
+            }
+            
+            // Update status in settings
+            const phase = getCyclePhase(currentDay);
+            document.getElementById('cycleStatusDisplay').innerHTML = `
+                <div>Day ${currentDay} of cycle</div>
+                <div style="font-size: 14px; color: #666; margin-top: 4px;">
+                    ${phase.name} • Next period: ${nextPeriodDate.toLocaleDateString()}
+                </div>
+            `;
+            
+            updateCycleInfo();
+        }
+        
+        function saveCycleSettings() {
+            lastPeriodDate = document.getElementById('lastPeriodDate').value;
+            avgCycleLength = parseInt(document.getElementById('avgCycleLength').value) || 29;
+            
+            if (lastPeriodDate) {
+                localStorage.setItem('lastPeriodDate', lastPeriodDate);
+                localStorage.setItem('avgCycleLength', avgCycleLength);
+                calculateCurrentCycleDay();
+            }
+        }
+        
+        function markPeriodStartedToday() {
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            
+            document.getElementById('lastPeriodDate').value = dateString;
+            lastPeriodDate = dateString;
+            
+            localStorage.setItem('lastPeriodDate', dateString);
+            calculateCurrentCycleDay();
+            
+            alert('🩸 Period marked! Cycle day reset to Day 1.');
+        }
+        
         function updateCycleInfo() {
-            const day = parseInt(document.getElementById('cycleDay').value);
+            // Get current day from calculation
+            const dayText = document.getElementById('cycleDayDisplay').textContent;
+            const day = parseInt(dayText) || 1;
             const phase = getCyclePhase(day);
             
             document.getElementById('cyclePhase').textContent = `Week ${phase.week} - ${phase.name}`;
@@ -627,10 +778,14 @@
             const day = document.getElementById('workoutDay').value;
             const exercises = workoutPlan[day];
             
+            // Get current cycle day for logging
+            const cycleDayText = document.getElementById('cycleDayDisplay').textContent;
+            const cycleDay = parseInt(cycleDayText) || 1;
+            
             currentWorkout = {
                 day: day,
                 date: new Date().toISOString(),
-                cycleDay: parseInt(document.getElementById('cycleDay').value),
+                cycleDay: cycleDay,
                 exercises: exercises.map(ex => ({
                     name: ex.name,
                     sets: Array(ex.sets).fill().map(() => ({weight: ex.weight, reps: '', rir: ''})),
@@ -907,16 +1062,28 @@
             localStorage.setItem('workoutPlan', JSON.stringify(workoutPlan));
             localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
             localStorage.setItem('cycleHistory', JSON.stringify(cycleHistory));
+            if (lastPeriodDate) localStorage.setItem('lastPeriodDate', lastPeriodDate);
+            localStorage.setItem('avgCycleLength', avgCycleLength);
         }
 
         function loadFromLocalStorage() {
             const plan = localStorage.getItem('workoutPlan');
             const history = localStorage.getItem('workoutHistory');
             const cycle = localStorage.getItem('cycleHistory');
+            const periodDate = localStorage.getItem('lastPeriodDate');
+            const cycleLen = localStorage.getItem('avgCycleLength');
             
             if (plan) workoutPlan = JSON.parse(plan);
             if (history) workoutHistory = JSON.parse(history);
             if (cycle) cycleHistory = JSON.parse(cycle);
+            if (periodDate) {
+                lastPeriodDate = periodDate;
+                document.getElementById('lastPeriodDate').value = periodDate;
+            }
+            if (cycleLen) {
+                avgCycleLength = parseInt(cycleLen);
+                document.getElementById('avgCycleLength').value = cycleLen;
+            }
         }
 
         // Tab Navigation
