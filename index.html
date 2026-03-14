@@ -307,9 +307,9 @@
             <h1>💪 Fitness Tracker</h1>
             <div class="header-info">
                 <div>
-                    <div style="font-size: 14px; color: #666;">Cycle Day</div>
-                    <input type="number" id="cycleDay" value="1" min="1" max="35" 
-                           style="width: 80px; margin: 0;" onchange="updateCycleInfo()">
+                    <div style="font-size: 14px; color: #666;">Current Cycle Day</div>
+                    <div style="font-size: 32px; font-weight: bold; color: #667eea;" id="cycleDayDisplay">1</div>
+                    <div style="font-size: 12px; color: #999;" id="nextPeriodInfo">Set period date in Settings</div>
                 </div>
                 <div id="cyclePhase" class="cycle-badge">Week 1 - MENSTRUAL</div>
             </div>
@@ -373,6 +373,30 @@
 
             <!-- Settings Tab -->
             <div id="settingsTab" class="tab-content hidden">
+                <h3>🩸 Cycle Tracking (Auto-Update)</h3>
+                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <label>Last Period Started:</label>
+                    <input type="date" id="lastPeriodDate" onchange="saveCycleSettings()">
+                    
+                    <label>Average Cycle Length (days):</label>
+                    <input type="number" id="avgCycleLength" value="29" min="21" max="45" onchange="saveCycleSettings()">
+                    
+                    <div style="margin: 16px 0; padding: 12px; background: white; border-radius: 6px;">
+                        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Current Status:</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #667eea;" id="cycleStatusDisplay">
+                            Set your last period date above
+                        </div>
+                    </div>
+                    
+                    <button class="success" onclick="markPeriodStartedToday()" style="margin-top: 12px;">
+                        🩸 Mark Period Started Today
+                    </button>
+                    
+                    <div style="margin-top: 12px; padding: 12px; background: #fff3cd; border-radius: 6px; font-size: 13px;">
+                        💡 Tip: The app will automatically update your cycle day each day. Just tap the button above when your period starts!
+                    </div>
+                </div>
+
                 <h3>Import Workout Plan</h3>
                 <label class="file-input-label" for="planUpload">
                     📄 Upload Workout Plan CSV
@@ -420,14 +444,20 @@
         let timerInterval = null;
         let timerSeconds = 0;
         let timerRunning = false;
+        let lastPeriodDate = null;
+        let avgCycleLength = 29;
 
         // Initialize app
         window.onload = function() {
             loadFromLocalStorage();
+            calculateCurrentCycleDay();
             updateCycleInfo();
             loadWorkoutPlan();
             populateHistoryDropdown();
             setDefaultWorkoutPlan();
+            
+            // Update cycle day daily
+            setInterval(calculateCurrentCycleDay, 60000); // Check every minute
         };
 
         // Default workout plan
